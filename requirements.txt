@@ -1,0 +1,7 @@
+keyboard==0.13.5
+mediapipe==0.8.9.1
+opencv-python==4.5.5.62
+rumps==0.3.0
+setuptools==60.5.0
+beepy~=1.0.7
+termcolor~=1.1.0
