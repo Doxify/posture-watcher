@@ -20,6 +20,7 @@ the core of this project in a weekend.
 I plan on using and improving this application a lot!
 
 Here's a list of some ideas I have, feel free to suggest any you may have.
+* Add TESTS
 * Clean up the project and make it an actual application as opposed to just
   a command line tool
 * Database support for storing deviance over time
