@@ -27,7 +27,7 @@ class PostureWatcher:
     It uses PoseDetector to compare the user's current posture to the base posture.
     """
 
-    def __init__(self, deviation_interval=5, deviation_adjustment=5, base_posture=None):
+    def __init__(self, deviation_interval=5, deviation_adjustment=5, deviation_threshold=30, base_posture=None):
         """
         Initializes the PostureWatcher.
         :param deviation_interval: The interval in seconds between checking for deviation
@@ -35,7 +35,7 @@ class PostureWatcher:
         :param base_posture: The base posture to compare to
         """
         self.detector = PoseDetector()
-        self.deviation = Deviation()
+        self.deviation = Deviation(threshold=deviation_threshold)
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -126,21 +126,20 @@ class PostureWatcher:
             img, _ = self.detector.find_pose(img)
             # img = cv2.resize(img, (600, 400))
             fps = Utils.calculate_fps(self.last_fps_calc_timestamp)
+            deviation = self.deviation.get_current_deviation()
             self.last_fps_calc_timestamp = time.time()
 
             if not self.base_posture:
                 cv2.putText(img, "Press 'SPACE' to set base posture.", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (255, 255, 255), 2)
-                # continue
+            else:
+                cv2.putText(img, f"Deviation: {deviation}%", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
             # calculate deviation at an interval
             if self.base_posture and time.time() - self.deviation.get_last_updated() > self.deviation_interval:
                 deviation = self._get_deviation_from_base_posture()
                 self.deviation.set_current_deviation(deviation)
                 self._handle_deviation()
-
-                cv2.putText(img, f"Deviation: {deviation}%", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (255, 255, 255), 2)
 
             cv2.putText(img, f"FPS: {fps}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow("PostureWatcher", img)
