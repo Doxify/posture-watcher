@@ -47,10 +47,17 @@ class PostureWatcher:
         self.logger = Logger('PW')
         self._run()
 
+    def stop(self):
+        """
+        Stops Posture Watcher and destroys allocated resources.
+        """
+        self.cap.release()
+        cv2.destroyAllWindows()
+
     def _get_deviation_from_base_posture(self):
         """
         Calculates the deviation from the base posture as a percentage
-        :return float from 0-100, 100 being the most deviant from the base posture
+        :returns: float from 0-100, 100 being the most deviant from the base posture
         """
         if self.base_posture is None:
             return None
@@ -144,8 +151,3 @@ class PostureWatcher:
             cv2.putText(img, f"FPS: {fps}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow("PostureWatcher", img)
             cv2.waitKey(1)
-
-    def stop(self):
-        self.cap.release()
-        cv2.destroyAllWindows()
-

@@ -44,7 +44,7 @@ pip install -r requirements.txt  # installing dependencies
 ```
 3. Launch the application.
 ```bash
-python3 app.py
+sudo python3 app.py
 ```
 4. Once the application launches, follow the instructions on the window the pops
    up.
