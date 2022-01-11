@@ -4,7 +4,7 @@ APP = ["src/app.py"]
 DATA_FILES = ["icon.png"]
 OPTIONS = {
     "argv_emulation": True,
-    "iconfile": "icon.png",
+    "iconfile": "icon.icns",
     "plist": {"CFBundleShortVersionString": "1.0.0", "LSUIElement": True},
     "packages": ["rumps"],
 }

@@ -55,7 +55,6 @@ class PostureWatcher:
         self.thread = None
         self.debug = debug
         self.logger = Logger('PW')
-        # self._run()
 
     def stop(self):
         """
@@ -150,19 +149,17 @@ class PostureWatcher:
 
         def execute():
             _, img = self.cap.read()
-            # img = cv2.flip(img, 1)
             img, _ = self.detector.find_pose(img)
+            # img = cv2.flip(img, 1)
             # img = cv2.resize(img, (600, 400))
             # fps = Utils.calculate_fps(self.last_fps_calc_timestamp)
             # deviation = self.deviation.current_deviation
             # self.last_fps_calc_timestamp = time.time()
 
-            # calculate deviation at an interval
-            if self.base_posture and time.time() - self.deviation.last_updated > self.deviation_interval:
-                self.deviation.current_deviation = self._get_deviation_from_base_posture()
-                self._handle_deviation()
-        Thread(target=execute).start()
+            self.deviation.current_deviation = self._get_deviation_from_base_posture()
+            self._handle_deviation()
 
-        # cv2.putText(img, f"FPS: {fps}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        # cv2.imshow("PostureWatcher", img)
-        # cv2.waitKey(1)
+            # cv2.putText(img, f"FPS: {fps}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # cv2.imshow("PostureWatcher", img)
+            # cv2.waitKey(1)
+        Thread(target=execute).start()
