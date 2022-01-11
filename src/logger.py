@@ -5,6 +5,14 @@ import time
 import beepy
 
 
+def clear_console():
+    if name == 'nt':  # windows
+        system('cls')
+
+    else:  # linux
+        system('clear')
+
+
 class Logger:
     """
     A simpler logger class.
@@ -21,13 +29,6 @@ class Logger:
         :param with_sound: Whether to play a sound.
         :param message: The message to log.
         """
-        # Clear the console.
-        if name == 'nt':  # windows
-            system('cls')
-
-        else:  # linux
-            system('clear')
-
         self.lock.acquire()
         print(colored(f'[{time.strftime("%H:%M:%S", time.localtime())}] {message}', color))
         self.lock.release()
