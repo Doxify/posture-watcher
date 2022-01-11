@@ -121,4 +121,3 @@ class Deviation:
         else:
             self._current_buffer = 0
             return False
-

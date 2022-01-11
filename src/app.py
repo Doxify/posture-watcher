@@ -1,6 +1,5 @@
 import rumps
 from posture import PostureWatcher
-# rumps.debug_mode(True)  # turn on command line logging information for development - default is off
 
 
 class Application(rumps.App):
@@ -20,7 +19,7 @@ class Application(rumps.App):
     @rumps.timer(1)
     def update_title(self, _):
         if not self.pw.base_posture:
-            self.title = "Please set your base posture to continue!"
+            self.title += "⚠️ Please set your base posture."
         else:
             cd = self.pw.deviation.current_deviation
             self.title = "Posture Watcher: "
