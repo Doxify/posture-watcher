@@ -16,7 +16,7 @@ class PoseLandmarks:
 
 class PoseDetector:
     """
-    PoseDector is a wrapper for Mediapipe's Pose library.
+    PoseDetector is a wrapper for the Mediapipe Pose component.
     """
     
     def __init__(self):
@@ -44,4 +44,3 @@ class PoseDetector:
             return img, self.results.pose_landmarks.landmark
 
         return img, None
-
