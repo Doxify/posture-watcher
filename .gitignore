@@ -8,6 +8,7 @@ __pycache__
 .coverage
 htmlcov
 
+
 syntax: glob
 *.dSYM
 *.pyc
@@ -19,4 +20,4 @@ unittest2-*.egg
 .vscode
 .idea
 venv
-setup.py
+/.eggs/

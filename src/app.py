@@ -33,7 +33,7 @@ class Application(rumps.App):
             if cd < 25:
                 self.title += "Great posture!"
             elif cd < 35:
-                self.title += f"Your posture is okay ({cd}%)"
+                self.title += f"Your posture could be better ({cd}%)"
             else:
                 self.title += f"Fix your posture! ({cd}%)"
 
