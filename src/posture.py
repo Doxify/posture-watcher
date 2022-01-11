@@ -1,12 +1,12 @@
-import cv2
-import keyboard
-import time
-
+import logger
 from detector import PoseDetector, PoseLandmarks
 from deviation import Deviation
 from threading import Thread
 from utils import Utils
 from logger import Logger
+import cv2
+import keyboard
+import time
 
 
 class BasePosture:
@@ -27,15 +27,24 @@ class PostureWatcher:
     It uses PoseDetector to compare the user's current posture to the base posture.
     """
 
-    def __init__(self, deviation_interval=5, deviation_adjustment=5, deviation_threshold=30, base_posture=None):
+    def __init__(self,
+                 deviation_interval=5,
+                 deviation_adjustment=5,
+                 deviation_threshold=25,
+                 deviation_buffer=3,
+                 base_posture=None,
+                 debug=True,):
         """
         Initializes the PostureWatcher.
         :param deviation_interval: The interval in seconds between checking for deviation
         :param deviation_adjustment: The amount of deviation to allow before triggering an alert
+        :param deviation_threshold: The threshold at which a deviation should trigger an alert
+        :param deviation_buffer: The number of consecutive deviations to allow before triggering an alert
         :param base_posture: The base posture to compare to
+        :param debug: Whether to print debug messages
         """
         self.detector = PoseDetector()
-        self.deviation = Deviation(threshold=deviation_threshold)
+        self.deviation = Deviation(threshold=deviation_threshold, max_buffer=deviation_buffer)
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -44,8 +53,9 @@ class PostureWatcher:
         self.deviation_adjustment = deviation_adjustment
         self.base_posture = base_posture
         self.thread = None
+        self.debug = debug
         self.logger = Logger('PW')
-        self._run()
+        # self._run()
 
     def stop(self):
         """
@@ -53,6 +63,33 @@ class PostureWatcher:
         """
         self.cap.release()
         cv2.destroyAllWindows()
+
+    def set_base_posture(self):
+        _, img = self.cap.read()
+        _, lm = self.detector.find_pose(img)
+        if lm:
+            nose = lm[PoseLandmarks.NOSE]
+            mouth_l = lm[9]
+            mouth_r = lm[10]
+            l_shoulder = lm[11]
+            r_shoulder = lm[12]
+            self.base_posture = BasePosture(nose, mouth_l, mouth_r, l_shoulder, r_shoulder)
+
+    def _log_deviation(self):
+        cd = self.deviation.current_deviation
+        cdma = self.deviation.moving_average
+        buffer = self.deviation.current_buffer
+
+        logger.clear_console()
+
+        if self.deviation.has_deviated():
+            self.logger.notify(f"Detected deviation from base posture by {cd}%", color='red', with_sound=True)
+        else:
+            self.logger.notify(f"You are doing great! {cd}% (MA: {cdma}%)", color='green')
+
+        if self.debug:
+            self.logger.notify(f"Deviation MA: {cdma}%", color='grey')
+            self.logger.notify(f"Deviation buffer: {buffer}", color='grey')
 
     def _get_deviation_from_base_posture(self):
         """
@@ -79,75 +116,53 @@ class PostureWatcher:
         r_shoulder = abs(self.base_posture.right_shoulder.x - lm[12].x) + abs(self.base_posture.right_shoulder.y - lm[12].y) + \
             abs(self.base_posture.right_shoulder.z - lm[12].z)
 
-        deviation = int(((nose + mouth_l + mouth_r + l_shoulder + r_shoulder) / (self.base_posture.nose.x +
+        deviation = int(
+            ((nose + mouth_l + mouth_r + l_shoulder + r_shoulder) / (self.base_posture.nose.x +
              self.base_posture.mouth_left.x + self.base_posture.mouth_right.x + self.base_posture.left_shoulder.x +
              self.base_posture.right_shoulder.x) * 100))
 
-        adjusted_deviation = deviation - self.deviation_adjustment
-
-        return 100 if adjusted_deviation > 100 else adjusted_deviation
+        adjusted_deviation = 100 if deviation >= 100 else deviation - self.deviation_adjustment
+        return adjusted_deviation
 
     def _handle_deviation(self):
         """
         Handles the deviation from the base posture and notifies the user if the deviation is above the threshold.
         """
-        if self.deviation.get_current_deviation() is None:
+        if self.deviation.current_deviation is None:
             return
 
-        cd = self.deviation.get_current_deviation()
-        cdma = self.deviation.get_moving_average()
+        self._log_deviation()
 
-        if self.deviation.has_deviated():
-            self.logger.notify(f"You are deviating from base posture by {cd}% (MA: {cdma}%)",
-                               color='red',
-                               with_sound=True)
-        elif not self.deviation.get_last_deviation_passed_threshold():
-            self.logger.notify(f"You are doing great! {cd}% (MA: {cdma}%)", color='green')
+    # def _listen_for_base_posture(self):
+    #     def init():
+    #         self.logger.notify("Stand still and press 'SPACE' to set base posture", color='yellow')
+    #         while self.base_posture is None:
+    #             keyboard.wait('space')
+    #             self.set_base_posture()
+    #             self.logger.notify("Base posture set, now monitoring for deviation", color='green')
+    #     Thread(target=init).start()
 
-    def _set_base_posture(self):
-        _, img = self.cap.read()
-        _, lm = self.detector.find_pose(img)
-        if lm:
-            nose = lm[PoseLandmarks.NOSE]
-            mouth_l = lm[9]
-            mouth_r = lm[10]
-            l_shoulder = lm[11]
-            r_shoulder = lm[12]
-            self.base_posture = BasePosture(nose, mouth_l, mouth_r, l_shoulder, r_shoulder)
+    def run(self):
+        # self._listen_for_base_posture()
+        # while True:
+        if not self.base_posture:
+            return
 
-    def _listen_for_base_posture(self):
-        def init():
-            self.logger.notify("Stand still and press 'SPACE' to set base posture", color='yellow')
-            while self.base_posture is None:
-                keyboard.wait('space')
-                self._set_base_posture()
-                cv2.destroyAllWindows()
-                self.logger.notify("Base posture set, now monitoring for deviation", color='green')
-        Thread(target=init).start()
-
-    def _run(self):
-        self._listen_for_base_posture()
-        while True:
+        def execute():
             _, img = self.cap.read()
-            img = cv2.flip(img, 1)
+            # img = cv2.flip(img, 1)
             img, _ = self.detector.find_pose(img)
             # img = cv2.resize(img, (600, 400))
-            fps = Utils.calculate_fps(self.last_fps_calc_timestamp)
-            deviation = self.deviation.get_current_deviation()
-            self.last_fps_calc_timestamp = time.time()
-
-            if not self.base_posture:
-                cv2.putText(img, "Press 'SPACE' to set base posture.", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (255, 255, 255), 2)
-            else:
-                cv2.putText(img, f"Deviation: {deviation}%", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            # fps = Utils.calculate_fps(self.last_fps_calc_timestamp)
+            # deviation = self.deviation.current_deviation
+            # self.last_fps_calc_timestamp = time.time()
 
             # calculate deviation at an interval
-            if self.base_posture and time.time() - self.deviation.get_last_updated() > self.deviation_interval:
-                deviation = self._get_deviation_from_base_posture()
-                self.deviation.set_current_deviation(deviation)
+            if self.base_posture and time.time() - self.deviation.last_updated > self.deviation_interval:
+                self.deviation.current_deviation = self._get_deviation_from_base_posture()
                 self._handle_deviation()
+        Thread(target=execute).start()
 
-            cv2.putText(img, f"FPS: {fps}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.imshow("PostureWatcher", img)
-            cv2.waitKey(1)
+        # cv2.putText(img, f"FPS: {fps}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        # cv2.imshow("PostureWatcher", img)
+        # cv2.waitKey(1)

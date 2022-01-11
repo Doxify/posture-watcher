@@ -6,7 +6,7 @@ PIP = $(VENV)/bin/pip
 .PHONY: run build clean
 
 run: $(VENV)/bin/activate
-	$(PYTHON) app.py
+	$(PYTHON) src/posture.py
 
 build: $(VENV)/bin/activate
 	make clean
@@ -14,7 +14,7 @@ build: $(VENV)/bin/activate
 	$(PYTHON) setup.py py2app
 
 open/macos:
-	open  ./$(DIST)/app.app/Contents/MacOS/app
+	open  ./$(DIST)/$(NAME).app/Contents/MacOS/$(NAME)
 
 setup: requirements.txt
 	pip install --upgrade pip
