@@ -6,7 +6,10 @@ PIP = $(VENV)/bin/pip
 .PHONY: run build clean
 
 run: $(VENV)/bin/activate
-	$(PYTHON) src/posture.py
+	$(PYTHON) src/app.py
+
+test: $(VENV)/bin/activate
+	$(PYTHON) -m unittest discover -s "tests" -p "*_test.py"
 
 build: $(VENV)/bin/activate
 	make clean

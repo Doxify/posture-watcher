@@ -81,6 +81,13 @@ class Deviation:
         return self._current_deviation
 
     @property
+    def deviation_threshold(self):
+        """
+        :return: The current deviation threshold.
+        """
+        return self._threshold
+
+    @property
     def moving_average(self):
         """
         :return: The current deviation moving average.

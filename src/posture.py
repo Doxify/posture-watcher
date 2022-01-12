@@ -1,8 +1,9 @@
+import cv2
+import logger as logger
+
 from detector import PoseDetector, PoseLandmarks
 from deviation import Deviation
 from logger import Logger
-import cv2
-import logger
 
 
 class BasePosture:
@@ -43,14 +44,17 @@ class PostureWatcher:
         """
         self.detector = PoseDetector()
         self.deviation = Deviation(threshold=deviation_threshold, max_buffer=deviation_buffer)
+
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.last_fps_calc_timestamp = 0
+
+        self.base_posture = base_posture
         self.deviation_algorithm = deviation_algorithm
         self.deviation_interval = deviation_interval
         self.deviation_adjustment = deviation_adjustment
-        self.base_posture = base_posture
+
         self.thread = None
         self.debug = debug
         self.logger = Logger('PW')
