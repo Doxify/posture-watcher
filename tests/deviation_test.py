@@ -1,7 +1,9 @@
-import unittest
+import sys
+sys.path.append('../src')
 
-from src.deviation import Deviation
-from src.posture import PostureWatcher
+import unittest
+from deviation import Deviation
+from posture import PostureWatcher
 
 
 class TestDeviationClass(unittest.TestCase):
@@ -19,7 +21,6 @@ class TestDeviationClass(unittest.TestCase):
         self.assertTrue(hasattr(self.deviation, '_current_deviation'))
         self.assertTrue(hasattr(self.deviation, '_last_updated'))
         self.assertTrue(hasattr(self.deviation, '_last_deviation_passed_threshold'))
-        self.assertTrue(hasattr(self.deviation, '_movingaverage'))
 
     def test_class_has_correct_default_attributes(self):
         self.assertEqual(self.deviation._threshold, 30)
@@ -46,3 +47,7 @@ class TestHasDeviatedMethod(unittest.TestCase):
     def tearDown(self) -> None:
         self.pw_with_buffer.stop()
         self.pw_wout_buffer.stop()
+
+
+if __name__ == '__main__':
+    unittest.main()

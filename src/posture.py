@@ -140,7 +140,7 @@ class PostureWatcher:
         adjusted_deviation = 100 if deviation >= 100 else int(deviation - self.deviation_adjustment)
         return adjusted_deviation
 
-    def _log_deviation(self, cd: int, cdma: float, buffer: int):
+    def _log_deviation(self, cd: int, buffer: int):
         """
         Logs the deviation using the built-in logging utility.
         :return: None
@@ -151,14 +151,13 @@ class PostureWatcher:
             self.logger.notify(f"Detected deviation from base posture by {cd}%", color='red', with_sound=True)
         else:
             if cd < 25:
-                self.logger.notify(f"✅ Great posture! {cd}% (MA: {cdma}%)", color='green')
+                self.logger.notify(f"✅ Great posture! {cd}% (Buf: {buffer})", color='green')
             elif cd < 35:
-                self.logger.notify(f"⚠️ Improve your posture! {cd}% (MA: {cdma}%)", color='yellow')
+                self.logger.notify(f"⚠️ Improve your posture! {cd}% (Buf: {buffer})", color='yellow')
             else:
-                self.logger.notify(f"️ Fix your posture! {cd}% (MA: {cdma}%)", color='red')
+                self.logger.notify(f"️ Fix your posture! {cd}% (Buf: {buffer})", color='red')
 
         if self.debug:
-            self.logger.notify(f"Deviation MA: {cdma}%", color='white')
             self.logger.notify(f"Deviation buffer: {buffer}", color='white')
 
     def _handle_deviation(self):
@@ -169,7 +168,6 @@ class PostureWatcher:
             return
 
         cd = self.deviation.current_deviation
-        cdma = self.deviation.moving_average
         buffer = self.deviation.current_buffer
 
-        self._log_deviation(cd, cdma, buffer)
+        self._log_deviation(cd, buffer)

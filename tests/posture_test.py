@@ -1,6 +1,7 @@
+import sys
+sys.path.append('../src')
 import unittest
-
-from src.posture import PostureWatcher
+from posture import PostureWatcher
 
 
 class TestPostureWatcherClass(unittest.TestCase):
@@ -39,5 +40,6 @@ def suite():
 
 
 if __name__ == '__main__':
+    unittest.main()
     runner = unittest.TextTestRunner()
     runner.run(suite())
